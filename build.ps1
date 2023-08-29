@@ -1,3 +1,4 @@
+#Requires -Version 7
 $pfbase = [System.Environment]::Is64BitOperatingSystem ? ${env:ProgramFiles(x86)} : $env:ProgramFiles
 $vswhere = "$pfbase\Microsoft Visual Studio\Installer\vswhere.exe"
 $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
