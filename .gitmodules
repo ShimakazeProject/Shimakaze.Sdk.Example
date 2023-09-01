@@ -1,0 +1,9 @@
+[submodule "Phobos"]
+	path = Phobos
+	url = https://github.com/Phobos-developers/Phobos.git
+[submodule "Client"]
+	path = Client
+	url = https://github.com/CnCNet/xna-cncnet-client.git
+[submodule "ClientLauncher"]
+	path = ClientLauncher
+	url = https://github.com/CnCNet/dta-mg-client-launcher.git
