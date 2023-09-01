@@ -1,0 +1,72 @@
+name: Build
+
+on:
+  push
+
+jobs:
+  build:
+    name: 构建
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup .Net 7 SDK
+        uses: actions/setup-dotnet@v3.2.0
+        with:
+          dotnet-version: 7.x
+
+      - name: Create Directory
+        shell: pwsh
+        run: New-Item -Type Directory out | Out-Null
+
+      - name: Build Phobos
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
+
+          & $msbuild Phobos\Phobos.sln -p:Configuration=Release -v:m
+          if ($LASTEXITCODE -ne 0) {
+              throw "Phobos Build Failed."
+          }
+          Move-Item Phobos\Release\Phobos.* out\ -Force
+
+      - name: Build XNA-CNCNet-Client
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          Client\BuildScripts\Build-Ares.ps1
+          Move-Item Client\Compiled\Ares\Resources out\ -Force
+
+      - name: Build dta-mg-client-launcher
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          dotnet build ClientLauncher -c:Release
+          if ($LASTEXITCODE -ne 0) {
+              throw "ClientLauncher Build Failed."
+          }
+          Move-Item ClientLauncher\bin\Release\net471\* out\ -Force
+
+      - name: Build Demo Mod
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          dotnet pack Mod -c:Release
+          if ($LASTEXITCODE -ne 0) {
+              throw "Mod Build Failed."
+          }
+          Move-Item Mod\bin\Release\*.mix out\ -Force
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: demo
+          path: |
+            out
+          retention-days: 3

@@ -3,7 +3,9 @@ $pfbase = [System.Environment]::Is64BitOperatingSystem ? ${env:ProgramFiles(x86)
 $vswhere = "$pfbase\Microsoft Visual Studio\Installer\vswhere.exe"
 $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe | select-object -first 1
 
-Remove-Item out -Recurse -Force | Out-Null
+if (Test-Path out) {
+    Remove-Item out -Recurse -Force | Out-Null
+}
 New-Item -Type Directory out | Out-Null
 
 # Build Phobos
@@ -25,8 +27,6 @@ if ($LASTEXITCODE -ne 0) {
 Move-Item ClientLauncher\bin\Release\net471\* out\ -Force
 
 # Build Mod
-# TODO: This is a BUG!
-Remove-Item Mod\bin, Mod\obj -Recurse -Force | Out-Null
 dotnet pack Mod -c:Release
 if ($LASTEXITCODE -ne 0) {
     throw "Mod Build Failed."
